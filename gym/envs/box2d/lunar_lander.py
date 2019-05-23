@@ -22,7 +22,7 @@ from gym.utils import seeding, EzPickle
 # Landing outside landing pad is possible. Fuel is infinite, so an agent can learn to fly and then land
 # on its first attempt. Please see source code for details.
 #
-# Too see heuristic landing, run:
+# To see heuristic landing, run:
 #
 # python gym/envs/box2d/lunar_lander.py
 #
@@ -77,6 +77,9 @@ class LunarLander(gym.Env, EzPickle):
     }
 
     continuous = False
+    reset_seed = None
+    pos_rewards = False
+    initial_y_rescale = 1
 
     def __init__(self):
         EzPickle.__init__(self)
@@ -120,6 +123,8 @@ class LunarLander(gym.Env, EzPickle):
         self.world.DestroyBody(self.legs[1])
 
     def reset(self):
+        if self.reset_seed is not None:
+            self.seed(self.reset_seed)
         self._destroy()
         self.world.contactListener_keepref = ContactDetector(self)
         self.world.contactListener = self.world.contactListener_keepref
@@ -157,7 +162,7 @@ class LunarLander(gym.Env, EzPickle):
         self.moon.color1 = (0.0,0.0,0.0)
         self.moon.color2 = (0.0,0.0,0.0)
 
-        initial_y = VIEWPORT_H/SCALE
+        initial_y = VIEWPORT_H/SCALE*self.initial_y_rescale
         self.lander = self.world.CreateDynamicBody(
             position = (VIEWPORT_W/SCALE/2, initial_y),
             angle=0.0,
@@ -314,6 +319,11 @@ class LunarLander(gym.Env, EzPickle):
         if not self.lander.awake:
             done   = True
             reward = +100
+        if self.pos_rewards:
+            orig_reward = reward
+            reward = (reward + 100) / 200  # Approximately [0, 1] range
+            if reward < 0:
+                raise Exception('Saw negative reward {} (rescaled {})'.format(orig_reward, reward))
         return np.array(state, dtype=np.float32), reward, done, {}
 
     def render(self, mode='human'):
@@ -360,6 +370,19 @@ class LunarLander(gym.Env, EzPickle):
 
 class LunarLanderContinuous(LunarLander):
     continuous = True
+
+
+class LunarLanderFixed(LunarLander):
+    reset_seed = 0
+
+class LunarLanderFixedPosRewards(LunarLander):
+    reset_seed = 0
+    pos_rewards = True
+
+class LunarLanderFixedHalfY(LunarLander):
+    reset_seed = 0
+    initial_y_rescale = 0.5
+
 
 def heuristic(env, s):
     # Heuristic for:

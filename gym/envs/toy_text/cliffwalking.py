@@ -30,9 +30,11 @@ class CliffWalkingEnv(discrete.DiscreteEnv):
     """
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self):
+    def __init__(self, treasure=0, cliff=True):
         self.shape = (4, 12)
         self.start_state_index = np.ravel_multi_index((3, 0), self.shape)
+        self._treasure = treasure
+        self._has_cliff = cliff
 
         nS = np.prod(self.shape)
         nA = 4
@@ -80,12 +82,17 @@ class CliffWalkingEnv(discrete.DiscreteEnv):
         new_position = np.array(current) + np.array(delta)
         new_position = self._limit_coordinates(new_position).astype(int)
         new_state = np.ravel_multi_index(tuple(new_position), self.shape)
-        if self._cliff[tuple(new_position)]:
+        if self._has_cliff and self._cliff[tuple(new_position)]:
             return [(1.0, self.start_state_index, -100, False)]
 
         terminal_state = (self.shape[0] - 1, self.shape[1] - 1)
         is_done = tuple(new_position) == terminal_state
-        return [(1.0, new_state, -1, is_done)]
+        return [(
+            1.0,
+            new_state,
+            -1 + (self._treasure if is_done else 0),
+            is_done,
+        )]
 
     def render(self, mode='human'):
         outfile = sys.stdout
@@ -97,7 +104,7 @@ class CliffWalkingEnv(discrete.DiscreteEnv):
             # Print terminal state
             elif position == (3, 11):
                 output = " T "
-            elif self._cliff[position]:
+            elif self._has_cliff and self._cliff[position]:
                 output = " C "
             else:
                 output = " o "

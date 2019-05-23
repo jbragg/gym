@@ -101,8 +101,29 @@ register(
 )
 
 register(
+    id='LunarLanderFixed-v2',
+    entry_point='gym.envs.box2d:LunarLanderFixed',
+    max_episode_steps=1000,
+    reward_threshold=200,
+)
+
+register(
+    id='LunarLanderFixedPos-v2',
+    entry_point='gym.envs.box2d:LunarLanderFixedPosRewards',
+    max_episode_steps=1000,
+    reward_threshold=200,
+)
+
+register(
     id='LunarLanderContinuous-v2',
     entry_point='gym.envs.box2d:LunarLanderContinuous',
+    max_episode_steps=1000,
+    reward_threshold=200,
+)
+
+register(
+    id='LunarLanderFixedHalfY-v2',
+    entry_point='gym.envs.box2d:LunarLanderFixedHalfY',
     max_episode_steps=1000,
     reward_threshold=200,
 )
@@ -165,6 +186,20 @@ register(
 register(
     id='CliffWalking-v0',
     entry_point='gym.envs.toy_text:CliffWalkingEnv',
+)
+
+register(
+    id='CliffWalking-treasure100-v0',
+    entry_point='gym.envs.toy_text:CliffWalkingEnv',
+    kwargs={'treasure': 100},
+    max_episode_steps=100,
+)
+
+register(
+    id='CliffWalking-nocliff-treasure100-v0',
+    entry_point='gym.envs.toy_text:CliffWalkingEnv',
+    kwargs={'cliff': False, 'treasure': 100},
+    max_episode_steps=100,
 )
 
 register(
